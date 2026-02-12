@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>CredHub VCAP_SERVICES Demo</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 2rem; background: #f5f5f5; color: #333; }
+        h1 { color: #1a56db; }
+        h2 { color: #374151; margin-top: 2rem; }
+        .card { background: white; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .safe { border-left: 4px solid #10b981; }
+        .unsafe { border-left: 4px solid #ef4444; }
+        .badge-safe { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+        .badge-unsafe { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+        table { border-collapse: collapse; width: 100%; }
+        td, th { text-align: left; padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
+        th { color: #6b7280; font-weight: 500; width: 200px; }
+        pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; }
+        .note { background: #fffbeb; border: 1px solid #fde68a; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+    </style>
+</head>
+<body>
+    <h1>CredHub VCAP_SERVICES Demo</h1>
+    <p>This app demonstrates <strong>safe (name-based)</strong> vs <strong>unsafe (index-based)</strong>
+       lookups of service bindings from VCAP_SERVICES.</p>
+
+    <div class="note">
+        <strong>TAS 10.2.4/10.2.5 Known Issue:</strong> CAPI changed the ordering of service bindings
+        in the VCAP_SERVICES array. Apps using index-based lookups may retrieve the wrong credentials.
+    </div>
+
+    <!-- SAFE LOOKUPS -->
+    <h2><span class="badge-safe">SAFE</span> Lookup by Name</h2>
+
+    <div class="card safe">
+        <h3 th:text="'Service: ' + ${serviceName1}">Service 1</h3>
+        <table>
+            <tr th:each="entry : ${safeLookup1}">
+                <th th:text="${entry.key}">Key</th>
+                <td th:text="${entry.value}">Value</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card safe">
+        <h3 th:text="'Service: ' + ${serviceName2}">Service 2</h3>
+        <table>
+            <tr th:each="entry : ${safeLookup2}">
+                <th th:text="${entry.key}">Key</th>
+                <td th:text="${entry.value}">Value</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UNSAFE LOOKUPS -->
+    <h2><span class="badge-unsafe">UNSAFE</span> Lookup by Index</h2>
+
+    <div class="card unsafe">
+        <h3>credhub[0]</h3>
+        <table>
+            <tr th:each="entry : ${unsafeLookup0}">
+                <th th:text="${entry.key}">Key</th>
+                <td th:text="${entry.value}">Value</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card unsafe">
+        <h3>credhub[1]</h3>
+        <table>
+            <tr th:each="entry : ${unsafeLookup1}">
+                <th th:text="${entry.key}">Key</th>
+                <td th:text="${entry.value}">Value</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- RAW VCAP_SERVICES -->
+    <h2>Raw VCAP_SERVICES</h2>
+    <pre th:text="${rawVcap}">VCAP_SERVICES JSON</pre>
+
+</body>
+</html>
