@@ -1,7 +1,7 @@
 {
-  "name": "credhub-demo",
+  "name": "credhub-demo-unsafe",
   "version": "1.0.0",
-  "description": "Demo app showing CredHub VCAP_SERVICES binding lookup - safe vs unsafe",
+  "description": "Demo app mimicking index-based VCAP_SERVICES lookup (the problematic pattern)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
