@@ -1,4 +1,4 @@
-# CredHub VCAP_SERVICES Demo
+# CredHub VCAP_SERVICES Demo (Node.js)
 
 Demonstrates **safe (name-based)** vs **unsafe (index-based)** service binding lookups
 from `VCAP_SERVICES`, illustrating the TAS 10.2.4/10.2.5 CAPI ordering known issue.
@@ -7,7 +7,6 @@ from `VCAP_SERVICES`, illustrating the TAS 10.2.4/10.2.5 CAPI ordering known iss
 
 - TAS foundation with the **CredHub Service Broker** tile installed
 - CF CLI authenticated and targeting your org/space
-- Java 17+ and Maven installed locally (for building)
 
 ## Setup
 
@@ -29,50 +28,26 @@ cf create-service credhub default demo-creds-api -c '{
 }'
 ```
 
-### 2. Build the app
-
-```bash
-./mvnw clean package -DskipTests
-```
-
-### 3. Push to Cloud Foundry
+### 2. Push to Cloud Foundry
 
 ```bash
 cf push
 ```
 
-The manifest will automatically bind both service instances.
+No need to `npm install` locally — the nodejs_buildpack handles it on push.
 
-### 4. View the app
+### 3. View the app
 
-Open the app URL in your browser. You'll see:
-
-- **Safe lookups** — credentials retrieved by service instance name (always correct)
-- **Unsafe lookups** — credentials retrieved by array index (may swap after upgrades)
-- **Raw VCAP_SERVICES** — the full JSON for inspection
+Open the app URL in your browser.
 
 ## Customizing Service Names
 
-If you use different service instance names, update them in either:
+Set environment variables in your manifest or via cf set-env:
 
-- `application.properties`:
-  ```properties
-  credhub.service-name-1=your-db-creds
-  credhub.service-name-2=your-api-creds
-  ```
+```yaml
+env:
+  CREDHUB_SERVICE_NAME_1: your-db-creds
+  CREDHUB_SERVICE_NAME_2: your-api-creds
+```
 
-- Or in `manifest.yml` under `services:` and via environment variables:
-  ```yaml
-  env:
-    CREDHUB_SERVICE_NAME_1: your-db-creds
-    CREDHUB_SERVICE_NAME_2: your-api-creds
-  ```
-
-## What This Demonstrates
-
-The CAPI ordering bug (TAS 10.2.4/10.2.5) can change the position of service
-bindings within the `VCAP_SERVICES` array for a given service type. If an app
-uses `vcapServices["credhub"][0]` to get credentials, it may silently get the
-wrong service's credentials after an upgrade.
-
-The fix is simple: always look up bindings by `name`, not by array index.
+Update the `services:` list in manifest.yml to match.
