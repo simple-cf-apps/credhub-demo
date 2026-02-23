@@ -4,83 +4,58 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // =============================================================================
-// This is the safe version of the app. Instead of grabbing credentials by
-// array index ([0], [1]), it looks them up by service instance name.
+// This uses index-based lookups, which is unsafe
 // =============================================================================
-
-// Define which service instance name maps to which role in the app.
-// These must match the cf create-service names.
-const DB_SERVICE_NAME = process.env.DB_SERVICE_NAME || "demo-creds-db";
-const API_SERVICE_NAME = process.env.API_SERVICE_NAME || "demo-creds-api";
-
-/**
- * Find a service binding by its instance name within VCAP_SERVICES.
- * Searches through all service types (credhub, p.mysql, etc.) and returns
- * the first binding whose "name" field matches.
- *
- * Returns null if no match is found.
- */
-function findServiceByName(vcapServices, serviceName) {
-  for (const serviceType of Object.values(vcapServices)) {
-    for (const binding of serviceType) {
-      if (binding.name === serviceName) {
-        return binding;
-      }
-    }
-  }
-  return null;
-}
 
 app.get("/", (req, res) => {
   const vcapServices = JSON.parse(process.env.VCAP_SERVICES || "{}");
+  const credhubService = vcapServices.credhub || [];
 
-  // Look up each binding by name — order in the array doesn't matter
-  const dbBinding = findServiceByName(vcapServices, DB_SERVICE_NAME);
-  const apiBinding = findServiceByName(vcapServices, API_SERVICE_NAME);
-
-  const dbCreds = dbBinding ? dbBinding.credentials : null;
-  const apiCreds = apiBinding ? apiBinding.credentials : null;
+  // This is the problematic pattern — grabbing credentials by array position.
+  // The app assumes [0] is always the DB creds and [1] is always the API creds.
+  const dbCreds = credhubService[0] ? credhubService[0].credentials : null;
+  const apiCreds = credhubService[1] ? credhubService[1].credentials : null;
 
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-  <title>js-api-test (safe)</title>
+  <title>js-api-test</title>
   <style>
     body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 2rem; background: #f5f5f5; color: #333; }
     h1 { color: #1a56db; }
     h2 { color: #374151; margin-top: 2rem; }
     .card { background: white; border-radius: 8px; padding: 1.5rem; margin: 1rem 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #10b981; }
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #ef4444; }
     table { border-collapse: collapse; width: 100%; }
     td, th { text-align: left; padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
     th { color: #6b7280; font-weight: 500; width: 200px; }
     pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px;
           overflow-x: auto; font-size: 0.85rem; }
-    .safe { background: #d1fae5; border: 1px solid #6ee7b7; padding: 1rem;
-            border-radius: 8px; margin: 1rem 0; }
+    .warning { background: #fee2e2; border: 1px solid #fca5a5; padding: 1rem;
+               border-radius: 8px; margin: 1rem 0; }
   </style>
 </head>
 <body>
-  <h1>js-api-test (safe version)</h1>
+  <h1>js-api-test (simulated)</h1>
 
-  <div class="safe">
-    <strong>This app uses name-based lookups:</strong>
-    <code>findServiceByName(vcapServices, "${DB_SERVICE_NAME}")</code><br>
-    Array ordering does not matter — always gets the correct binding.
+  <div class="warning">
+    <strong>This app uses index-based lookups:</strong>
+    <code>credhubService[0]</code> and <code>credhubService[1]</code><br>
+    This is an anti-pattern using indexes instead of service names 
   </div>
 
-  <h2>DB Credentials — looked up by name: "${DB_SERVICE_NAME}"</h2>
+  <h2>credhubService[0] — "DB Credentials"</h2>
   <div class="card">
     <table>
-      <tr><th>Binding Name</th><td>${dbBinding ? dbBinding.name : "NOT FOUND"}</td></tr>
+      <tr><th>Binding Name</th><td>${credhubService[0] ? credhubService[0].name : "N/A"}</td></tr>
       ${renderCreds(dbCreds)}
     </table>
   </div>
 
-  <h2>API Credentials — looked up by name: "${API_SERVICE_NAME}"</h2>
+  <h2>credhubService[1] — "API Credentials"</h2>
   <div class="card">
     <table>
-      <tr><th>Binding Name</th><td>${apiBinding ? apiBinding.name : "NOT FOUND"}</td></tr>
+      <tr><th>Binding Name</th><td>${credhubService[1] ? credhubService[1].name : "N/A"}</td></tr>
       ${renderCreds(apiCreds)}
     </table>
   </div>
@@ -106,5 +81,5 @@ app.get("/health", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`credhub-demo-safe listening on port ${port}`);
+  console.log(`credhub-demo-unsafe listening on port ${port}`);
 });
