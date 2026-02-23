@@ -1,6 +1,6 @@
 ---
 applications:
-  - name: credhub-demo-unsafe
+  - name: credhub-demo-safe
     memory: 256M
     instances: 1
     buildpacks:
